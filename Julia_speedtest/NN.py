@@ -99,4 +99,5 @@ def main():
     for i in range(n_samples):
         print(i, ":", datas[i], "->", round(forward(w_hidden, w_output, hidden_output, datas[i]), 4))
 
+
 print(timeit.timeit("main()", setup="from __main__ import main", number=10))
