@@ -15,14 +15,14 @@ const ERROR_LIMIT = 0.001
 sigmoid(x) = 1.0 / (1.0 + exp(-x))
 
 
-function load_data(filename="input.txt")
-    datas = []
+
+function load_data(datas, filename="input.txt")
     open(filename, "r") do f
         for line in eachline(f)
             push!(datas, parse.(Float64, split(line)))
         end
     end
-    return datas
+    return length(datas)
 end
 
 
@@ -74,18 +74,20 @@ function main()
 
     w_hidden = [rand(Float64, N_INPUTS+1) .* 2 .- 1 for _ in 1:N_HIDDENS]
     w_output = rand(Float64, N_HIDDENS+1) .* 2 .- 1
-    datas = load_data("input.txt")
+    datas = Vector{Vector{Float64}}()
     hidden_output = zeros(Float64, N_HIDDENS)
     error = ERROR_INIT
     epoch = 0
 
+    n_samples = load_data(datas, "input.txt")
+
     while error > ERROR_LIMIT
         error = 0.0
-        for sample in datas
-            output = forward(w_hidden, w_output, hidden_output, sample)
-            bp_output(w_output, hidden_output, sample, output)
-            bp_hidden(w_hidden, w_output, hidden_output, sample, output)
-            error += (sample[N_INPUTS+1] - output)^2
+        for j in 1:n_samples
+            output = forward(w_hidden, w_output, hidden_output, datas[j])
+            bp_output(w_output, hidden_output, datas[j], output)
+            bp_hidden(w_hidden, w_output, hidden_output, datas[j], output)
+            error += (datas[j][N_INPUTS+1] - output)^2
         end
         epoch += 1
         println(epoch, " ", error)
@@ -99,9 +101,10 @@ function main()
     println(w_output)
     println("-------------------")
 
-    for (i, sample) in enumerate(datas)
-        println(i, " : ", sample, " -> ", round(forward(w_hidden, w_output, hidden_output, sample), digits=4))
+    for i in 1:n_samples
+        println(i, " : ", datas[i], " -> ", round(forward(w_hidden, w_output, hidden_output, datas[i]), digits=4))
     end
 end
+
 
 @btime main()
